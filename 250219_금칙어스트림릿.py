@@ -8,7 +8,10 @@ import urllib.parse as par
 import urllib.request
 from collections import Counter
 from konlpy.tag import Mecab
-mecab = Mecab()
+
+# MeCab 사전 경로 수동 지정
+mecab = Mecab(dicpath='/usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ko-dic')
+
 
 
 
