@@ -3,3 +3,4 @@ requests
 bs4
 konlpy
 jpype1
+mecab-python3
