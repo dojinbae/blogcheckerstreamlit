@@ -1,3 +1,6 @@
+import os
+os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
+
 import streamlit as st
 import requests, re, json, random, datetime
 from bs4 import BeautifulSoup
