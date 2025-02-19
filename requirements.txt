@@ -1,2 +1,5 @@
 streamlit
+requests
 bs4
+konlpy
+jpype1
