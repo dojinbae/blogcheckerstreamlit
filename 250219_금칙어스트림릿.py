@@ -4,15 +4,7 @@ from bs4 import BeautifulSoup
 import urllib.parse as par
 import urllib.request
 from collections import Counter
-import os
-import subprocess
-
-from mecab import MeCab
-
-mecab = MeCab()
-
-
-
+from konlpy.tag import Okt
 
 
 # --------------------- 유틸 함수 ---------------------
@@ -314,7 +306,7 @@ def process_blog_url(url):
 
 
 # --------------------- Streamlit 앱 UI ---------------------
-st.title("블로그 텍스트 분석기")
+st.title("블로그 텍스트 분석기 (word_listf만 사용)")
 
 input_mode = st.radio("입력 방식 선택", ("블로그 URL", "직접 텍스트 입력"))
 
