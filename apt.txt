@@ -1,1 +1,4 @@
 openjdk-11-jdk
+mecab
+mecab-ko-dic
+mecab-ko-dic-utf8
