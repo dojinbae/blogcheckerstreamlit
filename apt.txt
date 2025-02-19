@@ -1,7 +1,0 @@
-openjdk-11-jdk
-mecab
-mecab-ipadic-utf8
-git
-curl
-make
-gcc
