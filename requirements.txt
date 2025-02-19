@@ -1,6 +1,4 @@
 streamlit
 requests
 bs4
-konlpy
-jpype1
-mecab-python3
+mecab-python3-ko-dic
