@@ -7,22 +7,9 @@ from collections import Counter
 import os
 import subprocess
 
-# mecab-ko-dic 설치 스크립트 (없으면 설치)
-if not os.path.exists('/usr/local/lib/mecab/dic/mecab-ko-dic'):
-    subprocess.run([
-        'git', 'clone', 'https://bitbucket.org/eunjeon/mecab-ko-dic.git'
-    ])
-    os.chdir('mecab-ko-dic')
-    subprocess.run(['./configure', '--prefix=/usr/local', '--with-dicdir=/usr/local/lib/mecab/dic'])
-    subprocess.run(['make'])
-    subprocess.run(['make', 'install'])
-    os.chdir('..')
+from mecab import MeCab
 
-from konlpy.tag import Mecab
-
-# 설치된 경로 사용
-mecab = Mecab(dicpath='/usr/local/lib/mecab/dic/mecab-ko-dic')
-print(mecab.morphs("안녕하세요. Streamlit에서 MeCab를 사용합니다."))
+mecab = MeCab()
 
 
 
