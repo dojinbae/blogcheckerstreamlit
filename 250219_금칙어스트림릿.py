@@ -7,7 +7,9 @@ from bs4 import BeautifulSoup
 import urllib.parse as par
 import urllib.request
 from collections import Counter
-from konlpy.tag import Okt
+from konlpy.tag import Mecab
+mecab = Mecab()
+
 
 
 # --------------------- 유틸 함수 ---------------------
