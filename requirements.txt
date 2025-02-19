@@ -1,3 +1,5 @@
 streamlit
 requests
-bs4
+beautifulsoup4
+konlpy
+JPype1
