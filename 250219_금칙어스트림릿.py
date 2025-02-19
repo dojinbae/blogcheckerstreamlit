@@ -1,16 +1,29 @@
-import os
-os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
-
 import streamlit as st
 import requests, re, json, random, datetime
 from bs4 import BeautifulSoup
 import urllib.parse as par
 import urllib.request
 from collections import Counter
+import os
+import subprocess
+
+# mecab-ko-dic 설치 스크립트 (없으면 설치)
+if not os.path.exists('/usr/local/lib/mecab/dic/mecab-ko-dic'):
+    subprocess.run([
+        'git', 'clone', 'https://bitbucket.org/eunjeon/mecab-ko-dic.git'
+    ])
+    os.chdir('mecab-ko-dic')
+    subprocess.run(['./configure', '--prefix=/usr/local', '--with-dicdir=/usr/local/lib/mecab/dic'])
+    subprocess.run(['make'])
+    subprocess.run(['make', 'install'])
+    os.chdir('..')
+
 from konlpy.tag import Mecab
 
-# MeCab 사전 경로 수동 지정
-mecab = Mecab(dicpath='/usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ko-dic')
+# 설치된 경로 사용
+mecab = Mecab(dicpath='/usr/local/lib/mecab/dic/mecab-ko-dic')
+print(mecab.morphs("안녕하세요. Streamlit에서 MeCab를 사용합니다."))
+
 
 
 
