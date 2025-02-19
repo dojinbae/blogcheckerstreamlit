@@ -1,4 +1,7 @@
 openjdk-11-jdk
 mecab
-mecab-ko-dic
-mecab-ko-dic-utf8
+mecab-ipadic-utf8
+git
+curl
+make
+gcc
