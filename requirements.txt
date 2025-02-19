@@ -1,4 +1,3 @@
 streamlit
 requests
 bs4
-mecab-python3-ko-dic
