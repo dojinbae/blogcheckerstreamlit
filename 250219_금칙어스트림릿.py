@@ -242,7 +242,7 @@ word_listf = [
 
 # --------------------- 텍스트 처리 함수 (금칙어검사) ---------------------
 def process_blog_text(text):
-    linea1 = text.replace("\n", "")
+    linea1 = text.replace("\n", "").replace("출처 입력", "").replace("사진 설명을 입력하세요", "")
     linea2 = str(linea1)
     re.sub('[^A-Za-z0-9가-힣]', '', linea2)
     line1 = clean_text(linea2)
