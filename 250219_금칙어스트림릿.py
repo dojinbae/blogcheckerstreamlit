@@ -291,7 +291,7 @@ def process_blog_url(url):
 menu = st.sidebar.radio("메뉴", ["금칙어검사", "원고정렬"])
 
 if menu == "금칙어검사":
-    st.title("블로그 텍스트 분석기 (word_listf만 사용)")
+    st.title("블로그 텍스트 분석기")
     main_keyword = st.text_input("메인키워드")
     input_mode = st.radio("입력 방식 선택", ("블로그 URL", "직접 텍스트 입력"))
     if input_mode == "블로그 URL":
@@ -306,7 +306,7 @@ if menu == "금칙어검사":
                         keyword_clean = main_keyword.replace(" ", "")
                         keyword_count = result["cleaned_text"].count(keyword_clean)
                         st.subheader("메인키워드 개수: " + str(keyword_count))
-                    st.write("※ word_listf 단어별 등장 횟수")
+                    st.write("※ 금칙어 횟수")
                     st.write(result["penlistf"])
                     st.write("※ 명사 빈도수 (2회 이상)")
                     st.write(result["mainlist"])
