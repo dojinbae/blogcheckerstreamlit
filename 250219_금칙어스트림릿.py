@@ -6,14 +6,14 @@ import urllib.request
 from collections import Counter
 from konlpy.tag import Okt
 
-# --------------------- 유틸 함수 ---------------------
+
+# --------------------- 금칙어 검사 기능 관련 유틸 함수 ---------------------
 def clean_text(inputString):
-    # 정규표현식 패턴을 raw string으로 작성합니다.
     text_rmv = re.sub(r'[-=+,#/\?:^.@*\"※~ㆍ!』‘|\(\)\[\]$`\'…%&><》\”\“\’·.~_;]', ' ', inputString)
     return text_rmv
 
-# --------------------- 단어 리스트 ---------------------
-# word_listf 리스트만 사용 (필요한 단어들만 남겨두세요)
+
+# --------------------- 단어 리스트 (금칙어) ---------------------
 word_listf = [
     '쌍검', '총칼', '참사', '박도', '진검', '독인', '질싸', '염탐', '도청', '사찰', '책동',
     '암표', '섹파', '무단', '영사', '누드', '연초', '궐련', '담배', '구초', '관연', '영초', '마약', '대마', '야바',
@@ -238,26 +238,21 @@ word_listf = [
     '폭은', '월이전', '여1', '약후', '스내', '서울의', '산중', '동산중', '도금대출', '급행',
     "힣"
 ]
-# --------------------- 텍스트 처리 함수 (word_listf만 체크) ---------------------
+
+
+# --------------------- 텍스트 처리 함수 (금칙어검사) ---------------------
 def process_blog_text(text):
-    # 줄바꿈 및 공백 제거 처리
     linea1 = text.replace("\n", "")
     linea2 = str(linea1)
     re.sub('[^A-Za-z0-9가-힣]', '', linea2)
     line1 = clean_text(linea2)
-    # line2는 띄어쓰기를 제거한 텍스트 (메인키워드 카운팅에 활용)
     line2 = line1.replace(" ", "")
-
-    # word_listf 단어 등장 횟수 확인
     penlistf = []
     for word in sorted(word_listf):
         count = line2.count(word)
         if count > 0:
             penlistf.append(f"{word}: {count}")
-
     total_chars = "총 글자수 : " + str(len(line2))
-
-    # 명사 추출 및 빈도수 계산 (2회 이상만 표시)
     okt = Okt()
     nouns = okt.nouns(line1)
     count_dict = dict(Counter(nouns))
@@ -266,7 +261,6 @@ def process_blog_text(text):
             del count_dict[key]
     sorted_items = sorted(count_dict.items(), key=lambda x: x[1], reverse=True)
     mainlist = [f"{key}: {value}" for key, value in sorted_items if value >= 2]
-
     return {
         "cleaned_text": line2,
         "total_chars": total_chars,
@@ -274,9 +268,8 @@ def process_blog_text(text):
         "mainlist": mainlist
     }
 
-# --------------------- URL 처리 함수 ---------------------
+
 def process_blog_url(url):
-    # 모바일 버전이 아니면 변환
     if 'm.blog' not in url:
         url = url.replace('blog', 'm.blog')
     try:
@@ -293,25 +286,42 @@ def process_blog_url(url):
     text = container.get_text().replace("\n", "")
     return process_blog_text(text)
 
-# --------------------- Streamlit 앱 UI ---------------------
-st.title("블로그 텍스트 분석기 (word_listf만 사용)")
 
-# 1. 메인키워드 입력 박스 (키워드만 입력 가능한 단일행 텍스트박스)
-main_keyword = st.text_input("메인키워드")
+# --------------------- 메뉴 탭 설정 ---------------------
+menu = st.sidebar.radio("메뉴", ["금칙어검사", "원고정렬"])
 
-input_mode = st.radio("입력 방식 선택", ("블로그 URL", "직접 텍스트 입력"))
-
-if input_mode == "블로그 URL":
-    blog_url = st.text_input("블로그 URL을 입력하세요")
-    if st.button("분석 시작"):
-        if blog_url:
-            with st.spinner("블로그 내용 크롤링 중..."):
-                result = process_blog_url(blog_url)
-            if result:
+if menu == "금칙어검사":
+    st.title("블로그 텍스트 분석기 (word_listf만 사용)")
+    main_keyword = st.text_input("메인키워드")
+    input_mode = st.radio("입력 방식 선택", ("블로그 URL", "직접 텍스트 입력"))
+    if input_mode == "블로그 URL":
+        blog_url = st.text_input("블로그 URL을 입력하세요")
+        if st.button("분석 시작"):
+            if blog_url:
+                with st.spinner("블로그 내용 크롤링 중..."):
+                    result = process_blog_url(blog_url)
+                if result:
+                    st.subheader(result["total_chars"])
+                    if main_keyword:
+                        keyword_clean = main_keyword.replace(" ", "")
+                        keyword_count = result["cleaned_text"].count(keyword_clean)
+                        st.subheader("메인키워드 개수: " + str(keyword_count))
+                    st.write("※ word_listf 단어별 등장 횟수")
+                    st.write(result["penlistf"])
+                    st.write("※ 명사 빈도수 (2회 이상)")
+                    st.write(result["mainlist"])
+                    with st.expander("클린된 텍스트 보기"):
+                        st.text(result["cleaned_text"])
+            else:
+                st.warning("URL을 입력해 주세요.")
+    else:
+        blog_text = st.text_area("블로그 글 내용을 직접 입력하세요", height=300)
+        if st.button("분석 시작", key="text"):
+            if blog_text:
+                with st.spinner("텍스트 분석 중..."):
+                    result = process_blog_text(blog_text)
                 st.subheader(result["total_chars"])
-                # 2. 메인키워드 카운팅 (띄어쓰기 무시)
                 if main_keyword:
-                    # 메인키워드에서 모든 공백 제거 후 카운팅
                     keyword_clean = main_keyword.replace(" ", "")
                     keyword_count = result["cleaned_text"].count(keyword_clean)
                     st.subheader("메인키워드 개수: " + str(keyword_count))
@@ -321,24 +331,163 @@ if input_mode == "블로그 URL":
                 st.write(result["mainlist"])
                 with st.expander("클린된 텍스트 보기"):
                     st.text(result["cleaned_text"])
+            else:
+                st.warning("분석할 텍스트를 입력해 주세요.")
+
+else:  # 원고정렬 탭
+    st.title("원고정렬")
+    st.header("원고 정렬 및 키워드 대체 기능")
+
+    # 알림 메시지 표시용 빈 컨테이너
+    alert_container = st.empty()
+
+
+    # --------------------- 원고정렬 기능 관련 함수 ---------------------
+    def is_number(word):
+        try:
+            float(word)
+            return True
+        except ValueError:
+            return False
+
+
+    def convert_hashtags_to_numbers(text):
+        lines = text.split('\n')
+        result = []
+        current_level = 0
+        counters = {}
+        for line in lines:
+            if line.startswith('#'):
+                level = line.count('#')
+                if level != current_level:
+                    current_level = level
+                    counters[level] = 0
+                counters[level] += 1
+                result.append(f"{counters[level]}. {line.lstrip('#').strip()}")
+            else:
+                result.append(line)
+        return '\n'.join(result)
+
+
+    def wrap_text(text, max_chars, apply_keyword_replacement=True):
+        ending_phrases = ["습니다", "니다", "죠", "데요", "군요", "네요", "세요", "입니까", "돼요", "겠습니다", "십시오", "하죠", "해요", "됩니다",
+                          "입니다", "이에요", "예요", "라고요", "이라고요", "다고요", "겠죠", "되겠습니다", "하겠습니다", "하십시오", "갑니다", "봅니다", "집니다",
+                          "랍니다", "었습니다", "었죠", "했어요", "하죠", "해보세요", "해봅시다", "할까요", "할게요", "드릴게요", "있어요", "말이에요", "말입니다",
+                          "니까요", "이죠", "잖아요", "그래요", "라고요", "이라고요", "라고 하더라고요", "라고 했어요", "라니까요", "이라니까요", "갑시다", "봅시다",
+                          "집시다", "랍시다", "었습니까", "했습니까", "하겠습니까", "하시겠습니까", "되었어요", "거든요", "었어요", "데요", "셨어요", "되었죠",
+                          "했대요", "하네요", "시나요", "졌어요", "하고요", "싶어요", "바랄게요", "예용", "하세용", "합니당", ]
+        for phrase in ending_phrases:
+            pattern = rf"({phrase})(?![.])(?<!면)(?<!고)"
+            text = re.sub(pattern, r"\1.", text)
+        text = re.sub(r'([.!?~])(?=[^\s])', r'\1 ', text)
+        words = text.split()
+        wrapped = ''
+        current_line = ''
+        for i, word in enumerate(words):
+            if any(punc in word for punc in ['.', '!', '?', '~']):
+                current_line += word
+                if word[-1] in ['.', '!', '?', '~']:
+                    if word[-1] == '.' and is_number(word.rstrip('.')) and (
+                            i + 1 < len(words) and is_number(words[i + 1])):
+                        current_line += ' '
+                    elif word[-1] == '.' and is_number(word.rstrip('.')) and (
+                            i + 1 < len(words) and not is_number(words[i + 1])):
+                        current_line += ' '
+                    else:
+                        wrapped += current_line.strip() + '\n\n'
+                        current_line = ''
+            else:
+                current_line += word + ' '
+                if len(current_line) > max_chars and not (is_number(word.rstrip('.')) and word[-1] == '.'):
+                    wrapped += current_line.strip() + '\n'
+                    current_line = ''
+        if current_line:
+            wrapped += current_line.strip()
+        if apply_keyword_replacement:
+            for old, new in st.session_state.keyword_pairs:
+                wrapped = wrapped.replace(old, new)
+        wrapped = convert_hashtags_to_numbers(wrapped)
+        return wrapped.strip()
+
+
+    def execute_wrap(text, max_chars, convert_flag):
+        try:
+            max_chars_int = int(max_chars)
+        except:
+            st.error("문자 수는 숫자로 입력해 주세요.")
+            return ""
+        return wrap_text(text, max_chars_int, apply_keyword_replacement=convert_flag)
+
+
+    # --------------------- 키워드 쌍 관리 ---------------------
+    if 'keyword_pairs' not in st.session_state:
+        st.session_state.keyword_pairs = []
+
+    st.subheader("키워드 관리")
+    col1, col2, col3 = st.columns([3, 3, 1])
+    with col1:
+        old_keyword = st.text_input("기존 키워드", key="old_keyword")
+    with col2:
+        new_keyword = st.text_input("대체 키워드", key="new_keyword")
+    with col3:
+        if st.button("키워드 추가"):
+            if old_keyword:
+                exists = any(old == old_keyword for old, _ in st.session_state.keyword_pairs)
+                if exists:
+                    alert_container.warning("이미 등록된 키워드입니다.")
+                else:
+                    st.session_state.keyword_pairs.append((old_keyword, new_keyword))
+                    alert_container.success("키워드가 추가되었습니다.")
+            else:
+                alert_container.warning("기존 키워드를 입력해 주세요.")
+
+    # 등록된 키워드 쌍을 selectbox로 표시 및 삭제
+    if st.session_state.keyword_pairs:
+        keyword_options = [f"{old} -> {new}" for old, new in st.session_state.keyword_pairs]
+        # 키워드 개수에 따라 key 값을 변경하여 자동 갱신 효과 부여
+        select_key = "selected_keyword_" + str(len(st.session_state.keyword_pairs))
+        selected_keyword = st.selectbox("등록된 키워드 쌍", keyword_options, key=select_key)
+        if st.button("선택된 키워드 삭제"):
+            index = keyword_options.index(selected_keyword)
+            st.session_state.keyword_pairs.pop(index)
+            alert_container.success("키워드가 삭제되었습니다.")
+    else:
+        st.info("등록된 키워드가 없습니다.")
+
+    # 키워드 저장 및 불러오기
+    col_save, col_load = st.columns(2)
+    with col_save:
+        save_filename = st.text_input("저장 파일명 (예: keywords.json)", "keywords.json", key="save_filename")
+        st.download_button("키워드 저장",
+                           data=json.dumps(st.session_state.keyword_pairs, ensure_ascii=False, indent=4),
+                           file_name=save_filename,
+                           mime="application/json")
+    with col_load:
+        # file_uploader에 on_change 콜백 추가
+        def load_keywords_callback():
+            uploaded = st.session_state.upload_keyword
+            if uploaded is not None:
+                try:
+                    loaded = json.load(uploaded)
+                    st.session_state.keyword_pairs = loaded
+                    alert_container.success("키워드가 불러와졌습니다.")
+                except Exception as e:
+                    alert_container.error("파일 불러오기 실패: " + str(e))
+
+
+        st.file_uploader("키워드 불러오기 (JSON 파일)", type=["json"], key="upload_keyword", on_change=load_keywords_callback)
+
+    st.markdown("---")
+    st.subheader("원고 정렬 기능")
+    input_text = st.text_area("원고 입력", height=200)
+    col_a, col_b = st.columns(2)
+    with col_a:
+        max_chars = st.number_input("문자 수", value=15, step=1)
+    with col_b:
+        convert_flag = st.checkbox("텍스트 변환 여부", value=True)
+    if st.button("실행"):
+        if input_text:
+            result = execute_wrap(input_text, max_chars, convert_flag)
+            st.text_area("정렬 결과", value=result, height=200)
         else:
-            st.warning("URL을 입력해 주세요.")
-else:
-    blog_text = st.text_area("블로그 글 내용을 직접 입력하세요", height=300)
-    if st.button("분석 시작", key="text"):
-        if blog_text:
-            with st.spinner("텍스트 분석 중..."):
-                result = process_blog_text(blog_text)
-            st.subheader(result["total_chars"])
-            if main_keyword:
-                keyword_clean = main_keyword.replace(" ", "")
-                keyword_count = result["cleaned_text"].count(keyword_clean)
-                st.subheader("메인키워드 개수: " + str(keyword_count))
-            st.write("※ word_listf 단어별 등장 횟수")
-            st.write(result["penlistf"])
-            st.write("※ 명사 빈도수 (2회 이상)")
-            st.write(result["mainlist"])
-            with st.expander("클린된 텍스트 보기"):
-                st.text(result["cleaned_text"])
-        else:
-            st.warning("분석할 텍스트를 입력해 주세요.")
+            st.warning("원고를 입력해 주세요.")
