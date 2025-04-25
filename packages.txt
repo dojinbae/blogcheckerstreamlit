@@ -1,1 +1,1 @@
-openjdk-11-jdk
+unixodbc-dev
