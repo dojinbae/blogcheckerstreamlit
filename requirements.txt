@@ -1,0 +1,5 @@
+streamlit
+requests
+beautifulsoup4
+konlpy
+JPype1
